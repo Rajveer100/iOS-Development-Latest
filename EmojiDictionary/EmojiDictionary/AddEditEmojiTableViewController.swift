@@ -1,36 +1,18 @@
-//
-//  AddEditEmojiTableViewController.swift
-//  EmojiDictionary
-//
-//  Created by Rajveer Singh on 26/09/22.
-//
-
 import UIKit
 
 class AddEditEmojiTableViewController: UITableViewController {
-
-    @IBOutlet weak var saveButton: UIBarButtonItem!
-    
-    @IBOutlet weak var symbolTextField: UITextField!
-    @IBOutlet weak var nameTextField: UITextField!
-    @IBOutlet weak var descriptionTextField: UITextField!
-    @IBOutlet weak var usageTextField: UITextField!
     
     var emoji: Emoji?
-    
-    init?(coder: NSCoder, emoji: Emoji?) {
-        
-        self.emoji = emoji
-        super.init(coder: coder)
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
+
+    @IBOutlet var symbolTextField: UITextField!
+    @IBOutlet var nameTextField: UITextField!
+    @IBOutlet var descriptionTextField: UITextField!
+    @IBOutlet var usageTextField: UITextField!
+    @IBOutlet var saveButton: UIBarButtonItem!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         if let emoji = emoji {
             
             symbolTextField.text = emoji.symbol
@@ -47,16 +29,23 @@ class AddEditEmojiTableViewController: UITableViewController {
         updateSaveButtonState()
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    init?(coder: NSCoder, emoji: Emoji?) {
         
-        guard segue.identifier == "saveUnwind" else { return }
+        self.emoji = emoji
+        super.init(coder: coder)
+    }
+    
+    required init?(coder: NSCoder) {
         
-        let symbol = symbolTextField.text!
-        let name = nameTextField.text ?? ""
-        let description = descriptionTextField.text ?? ""
-        let usage = usageTextField.text ?? ""
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func updateSaveButtonState() {
         
-        emoji = Emoji(symbol: symbol, name: name, description: description, usage: usage)
+        let nameText = nameTextField.text ?? ""
+        let descriptionText = descriptionTextField.text ?? ""
+        let usageText = usageTextField.text ?? ""
+        saveButton.isEnabled = containsSingleEmoji(symbolTextField) && !nameText.isEmpty && !descriptionText.isEmpty && !usageText.isEmpty
     }
     
     @IBAction func textEditingChanged(_ sender: UITextField) {
@@ -64,26 +53,27 @@ class AddEditEmojiTableViewController: UITableViewController {
         updateSaveButtonState()
     }
     
-    func updateSaveButtonState() {
-        
-        let symbolText = symbolTextField.text ?? ""
-        let nameText = nameTextField.text ?? ""
-        let descriptionText = descriptionTextField.text ?? ""
-        let usageText = usageTextField.text ?? ""
-        
-        saveButton.isEnabled = !symbolText.isEmpty && !nameText.isEmpty && !descriptionText.isEmpty && !usageText.isEmpty && containsSingleEmoji(symbolTextField)
-    }
-
     func containsSingleEmoji(_ textField: UITextField) -> Bool {
         
         guard let text = textField.text, text.count == 1 else {
             
             return false
         }
-              
-        let isCombinedIntoEmoji = text.unicodeScalars.count > 1 && text.unicodeScalars.first?.properties.isEmoji ?? false
-        let isEmojiPresentation = text.unicodeScalars.first?.properties.isEmojiPresentation ?? false
         
-        return isEmojiPresentation || isCombinedIntoEmoji
+        let isEmoji = text.unicodeScalars.first?.properties.isEmojiPresentation ?? false
+        
+        return isEmoji
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        guard segue.identifier == "saveUnwind" else { return }
+
+        let symbol = symbolTextField.text ?? ""
+        let name = nameTextField.text ?? ""
+        let description = descriptionTextField.text ?? ""
+        let usage = usageTextField.text ?? ""
+        
+        emoji = Emoji(symbol: symbol, name: name, description: description, usage: usage)
     }
 }
